@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>무간지옥 단어암기 - Avici Vocab v2.3</title>
     <style>
         :root {
@@ -30,6 +30,7 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             min-height: 100vh;
+            min-height: 100dvh; /* 모바일 브라우저 하단 바 대응 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -41,6 +42,7 @@
             width: 100%;
             max-width: 480px;
             height: 100vh;
+            height: 100dvh; /* 모바일 브라우저 하단 바 대응 */
             max-height: 880px;
             display: flex;
             flex-direction: column;
@@ -59,6 +61,8 @@
             width: 100%;
             height: 100%;
             padding: 20px;
+            overflow-y: auto; /* 내용이 길어져 버튼이 잘릴 경우 스크롤 허용 */
+            -webkit-overflow-scrolling: touch;
         }
 
         .screen.active {
@@ -71,6 +75,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            flex-shrink: 0;
         }
 
         .title {
@@ -101,6 +106,7 @@
         /* Setup Screen Controls */
         .setup-group {
             margin-bottom: 18px;
+            flex-shrink: 0;
         }
 
         .setup-group label {
@@ -148,6 +154,8 @@
             font-weight: 700;
             box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
             cursor: pointer;
+            flex-shrink: 0;
+            margin-bottom: 10px;
         }
 
         .btn-secondary {
@@ -194,6 +202,7 @@
             font-weight: 700;
             padding: 6px 0;
             margin-bottom: 8px;
+            flex-shrink: 0;
         }
         .hint-item {
             padding: 6px;
@@ -212,6 +221,7 @@
             border-radius: 3px;
             overflow: hidden;
             margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
         .timer-bar {
@@ -231,6 +241,7 @@
             justify-content: center;
             perspective: 1000px;
             margin-bottom: 10px;
+            min-height: 400px;
         }
 
         .card {
@@ -246,8 +257,13 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             border: 1px solid rgba(255,255,255,0.08);
             touch-action: none;
-            transition: transform 0.15s ease-out, opacity 0.2s ease-out, border-color 0.15s;
+            
+            /* 잔상(Ghosting) 방지를 위한 하드웨어 가속 렌더링 강제 */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translate3d(0, 0, 0); 
             will-change: transform;
+            transition: transform 0.15s ease-out, opacity 0.2s ease-out, border-color 0.15s;
         }
 
         /* Swipe State Visuals */
@@ -283,7 +299,6 @@
             font-weight: 500;
         }
 
-        /* Context mode sentence styling (이탤릭체) */
         .context-sentence {
             font-size: 1.05rem;
             line-height: 1.5;
@@ -304,7 +319,6 @@
             border-radius: 4px;
         }
 
-        /* Highlighted target word in sentence (볼드 이탤릭) */
         .target-word-highlight {
             color: #38bdf8;
             font-weight: 800;
@@ -341,7 +355,6 @@
             margin-bottom: 6px;
         }
 
-        /* 어원(Etymology) 스타일링 */
         .etymology-badge {
             font-size: 0.8rem;
             color: #fbbf24;
@@ -356,7 +369,6 @@
             font-weight: 500;
         }
 
-        /* 예문 이탤릭체 */
         .example-sentence {
             font-size: 0.88rem;
             color: #cbd5e1;
@@ -371,7 +383,6 @@
             font-style: normal;
         }
 
-        /* Result Screen */
         .result-stats {
             background: var(--card-bg);
             border-radius: 16px;
@@ -479,21 +490,19 @@
 </div>
 
 <script>
-    // 내장 기본 데이터셋 (어원 정보 포함)
     const defaultData = [
         {"Word/Phrase": "resume", "Pronunciation": "/rɪˈzjuːm/", "Meaning (POS)": "n. 이력서", "Etymology": "re(다시) + sumere(취하다) [주석: 핵심을 다시 요약한 문서 -> 이력서]", "Example Sentence": "Please send your resume to HR.", "Example Translation": "인사과로 이력서를 보내주세요."},
         {"Word/Phrase": "applicant", "Pronunciation": "/ˈæplɪkənt/", "Meaning (POS)": "n. 지원자, 신청자", "Etymology": "ad(~에) + plic(접다) + ant(사람) [주석: 회사에 자신을 접어 붙이는 사람]", "Example Sentence": "There were over 100 applicants.", "Example Translation": "100명이 넘는 지원자가 있었습니다."},
         {"Word/Phrase": "requirement", "Pronunciation": "/rɪˈkwaɪərmənt/", "Meaning (POS)": "n. 필요조건, 요건", "Etymology": "re(강조) + quaerere(구하다) + ment(명사형)", "Example Sentence": "You must meet the minimum requirements.", "Example Translation": "당신은 최소 요건을 충족해야 합니다."},
         {"Word/Phrase": "meet", "Pronunciation": "/miːt/", "Meaning (POS)": "v. (필요,요구 등을)만족시키다", "Etymology": "게르만어 gemōt(만남) [주석: 요구사항에 마주하다 -> 충족시키다]", "Example Sentence": "The design fails to meet customer demands.", "Example Translation": "그 디자인은 고객 요구를 충족시키지 못합니다."},
-        {"Word/Phrase": "qualified", "Pronunciation": "/ˈkwɑːlɪfaɪd/", "Meaning (POS)": "a. 자격있는, 적격의", "Etymology": "quali(어떤 종류의) + fy(만들다) + ed(형용사)", "Example Sentence": "She is qualified for the position.", "Example Translation": "그녀는 그 직책에 자격이 있습니다."},
+        {"Word/Phrase": "qualified", "Pronunciation": "/ˈkwɑːlɪfaɪd/", "Meaning (POS)": "adj. 자격있는, 적격의", "Etymology": "quali(어떤 종류의) + fy(만들다) + ed(형용사)", "Example Sentence": "She is qualified for the position.", "Example Translation": "그녀는 그 직책에 자격이 있습니다."},
         {"Word/Phrase": "candidate", "Pronunciation": "/ˈkændɪdət/", "Meaning (POS)": "n. 후보자, 지원자", "Etymology": "candid(순수한/하얀) + ate(사람) [주석: 로마 공직 후보자의 하얀 옷에서 유래]", "Example Sentence": "He is a strong candidate.", "Example Translation": "그는 유력한 후보자입니다."},
         {"Word/Phrase": "confidence", "Pronunciation": "/ˈkɑːnfɪdəns/", "Meaning (POS)": "n. 확신, 자신, 신임", "Etymology": "con(완전히) + fid(믿다) + ence(명사형)", "Example Sentence": "I have confidence in your skills.", "Example Translation": "나는 당신의 기술을 확신합니다."},
-        {"Word/Phrase": "highly", "Pronunciation": "/ˈhaɪli/", "Meaning (POS)": "ad. 매우, 대단히", "Etymology": "high(높은) + ly(부사)", "Example Sentence": "The book is highly recommended.", "Example Translation": "그 책은 강력히 추천됩니다."},
-        {"Word/Phrase": "professional", "Pronunciation": "/prəˈfeʃənl/", "Meaning (POS)": "n. 전문적인, 직업의, 전문가", "Etymology": "pro(앞에서) + fess(선언하다) + ional", "Example Sentence": "Seek professional advice.", "Example Translation": "전문적인 조언을 구하세요."},
-        {"Word/Phrase": "interview", "Pronunciation": "/ˈɪntərvjuː/", "Meaning (POS)": "v. 면접, 면접을 보다", "Etymology": "inter(서로) + view(보다)", "Example Sentence": "I have an interview tomorrow.", "Example Translation": "나는 내일 면접이 있습니다."}
+        {"Word/Phrase": "highly", "Pronunciation": "/ˈhaɪli/", "Meaning (POS)": "adv. 매우, 대단히", "Etymology": "high(높은) + ly(부사)", "Example Sentence": "The book is highly recommended.", "Example Translation": "그 책은 강력히 추천됩니다."},
+        {"Word/Phrase": "professional", "Pronunciation": "/prəˈfeʃənl/", "Meaning (POS)": "adj. 전문적인 / n. 전문가", "Etymology": "pro(앞에서) + fess(선언하다) + ional", "Example Sentence": "Seek professional advice.", "Example Translation": "전문적인 조언을 구하세요."},
+        {"Word/Phrase": "interview", "Pronunciation": "/ˈɪntərvjuː/", "Meaning (POS)": "n. 면접 / v. 면접을 보다", "Etymology": "inter(서로) + view(보다)", "Example Sentence": "I have an interview tomorrow.", "Example Translation": "나는 내일 면접이 있습니다."}
     ];
 
-    // Global State
     let activeData = [...defaultData];
     let wordQueue = [];
     let completedWords = [];
@@ -509,7 +518,6 @@
     let cardStartTime = 0;
     let isCardProcessing = false;
 
-    // --- 1. HAPTIC FEEDBACK ---
     function triggerHaptic(type) {
         if (!("navigator" in window) || !navigator.vibrate) return;
         try {
@@ -520,7 +528,6 @@
         } catch (e) {}
     }
 
-    // --- 2. LOCALSTORAGE MANAGEMENT ---
     function saveToLocalStorage() {
         const payload = {
             activeData,
@@ -573,7 +580,6 @@
         infoEl.innerHTML = `총 단어: <strong>${activeData.length}</strong>개 | 암기 완료: <strong style="color:var(--accent-green)">${completedWords.length}</strong>개`;
     }
 
-    // --- 3. WORD STEMMING & HIGHLIGHTING ---
     function getWordStemRegex(targetWord) {
         if (!targetWord) return null;
         let clean = targetWord.trim().toLowerCase().split(/[\s/,\(\)]+/)[0];
@@ -603,7 +609,6 @@
         return new RegExp('\\b(' + escapeRegExp(stem) + '[a-zA-Z]*|' + escapeRegExp(clean) + '[a-zA-Z]*)\\b', 'gi');
     }
 
-    // 예문 전체 <i> (이탤릭체) + 표적단어 <b class="target-word-highlight"><i>...</i></b> (볼드 이탤릭)
     function formatExampleSentence(sentence, targetWord) {
         if (!sentence) return '';
         const regex = getWordStemRegex(targetWord);
@@ -613,7 +618,6 @@
         return `<i>${highlighted}</i>`;
     }
 
-    // 맥락 모드용 빈칸 치환 예문
     function formatBlankSentence(sentence, targetWord) {
         if (!sentence) return '';
         const regex = getWordStemRegex(targetWord);
@@ -623,7 +627,6 @@
         return `<i>${blanked}</i>`;
     }
 
-    // --- 4. MODE & FILE HANDLING (D열 어원 + F/G열 예문 연결) ---
     function setMode(mode, btn) {
         quizMode = mode;
         updateModeButtonsUI();
@@ -658,8 +661,6 @@
         for (let i = 1; i < lines.length; i++) {
             const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, ''));
             if (row.length >= 2) {
-                // A열: 단어(0), B열: 발음(1), C열: 뜻(2), D열: 어원(3)
-                // F열: 영어예문(5), G열: 예문번역(6)
                 const etymology = row[3] || "";
                 const exampleSentence = row[5] !== undefined && row[5] !== "" ? row[5] : (row[4] || "");
                 const exampleTranslation = row[6] !== undefined && row[6] !== "" ? row[6] : (row[5] || "");
@@ -689,7 +690,6 @@
         updateStorageInfoUI();
     }
 
-    // --- 5. QUIZ CORE & TIMEOUT SYSTEM ---
     function startQuiz() {
         timeLimitSec = parseInt(document.getElementById('limit-sec').value) || 3;
         
@@ -763,7 +763,7 @@
         if (card) {
             card.classList.add('swiping-left', 'flipped');
             card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            card.style.transform = 'translate(-1000px, 0) rotate(-35deg)';
+            card.style.transform = 'translate3d(-1000px, 0, 0) rotate(-35deg)';
             card.style.opacity = '0';
             setTimeout(() => {
                 processSRSResult('UNKNOWN');
@@ -843,7 +843,6 @@
         container.appendChild(card);
     }
 
-    // --- 6. 3-WAY SWIPE EVENTS ---
     function setup3WaySwipeEvents(card) {
         let startX = 0, startY = 0;
         let currentX = 0, currentY = 0;
@@ -868,7 +867,7 @@
             }
 
             const rotate = currentX * 0.05;
-            card.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+            card.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotate}deg)`;
 
             card.classList.remove('swiping-left', 'swiping-right', 'swiping-up');
 
@@ -890,35 +889,30 @@
             const thresholdY = -90;
 
             if (currentY < thresholdY && Math.abs(currentY) > Math.abs(currentX) * 0.8) {
-                // ⬆️ 애매함
                 isCardProcessing = true;
-                card.style.transform = `translate(${currentX}px, -1000px)`;
+                card.style.transform = `translate3d(${currentX}px, -1000px, 0)`;
                 card.style.opacity = '0';
                 setTimeout(() => processSRSResult('DOUBT'), 180);
             } else if (currentX > thresholdX) {
-                // ➡️ 확신
                 isCardProcessing = true;
-                card.style.transform = `translate(1000px, ${currentY}px) rotate(35deg)`;
+                card.style.transform = `translate3d(1000px, ${currentY}px, 0) rotate(35deg)`;
                 card.style.opacity = '0';
                 setTimeout(() => processSRSResult('CONFIDENT'), 180);
             } else if (currentX < -thresholdX) {
-                // ⬅️ 모름
                 isCardProcessing = true;
-                card.style.transform = `translate(-1000px, ${currentY}px) rotate(-35deg)`;
+                card.style.transform = `translate3d(-1000px, ${currentY}px, 0) rotate(-35deg)`;
                 card.style.opacity = '0';
                 setTimeout(() => processSRSResult('UNKNOWN'), 180);
             } else {
-                card.style.transform = `translate(0, 0) rotate(0)`;
+                card.style.transform = `translate3d(0, 0, 0) rotate(0)`;
                 card.classList.remove('swiping-left', 'swiping-right', 'swiping-up');
             }
         };
 
-        // Touch
         card.addEventListener('touchstart', (e) => onStart(e.touches[0].clientX, e.touches[0].clientY));
         card.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX, e.touches[0].clientY));
         card.addEventListener('touchend', onEnd);
 
-        // Mouse (Desktop)
         card.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
         const onMouseMove = (e) => { if (isDragging) onMove(e.clientX, e.clientY); };
         const onMouseUp = () => { if (isDragging) { onEnd(); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('mouseup', onMouseUp); } };
