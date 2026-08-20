@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🔥 무간지옥 - Avici Vocab v2.4.1</title>
+<title>🔥 무간지옥 - Avici Vocab v2.5</title>
 <style>
 :root{--bg:#0b0f19;--card:#151d2a;--tx:#f8fafc;--sub:#94a3b8;--grn:#10b981;--red:#ef4444;--amb:#f59e0b;--blu:#3b82f6;--pur:#8b5cf6}
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
@@ -55,7 +55,7 @@ input[type=number]{width:100%;background:var(--card);border:1px solid rgba(255,2
 <div class="app-container">
   <!-- SETUP SCREEN -->
   <div id="setup-screen" class="screen active">
-    <div class="header"><div class="title">🔥 무간지옥 v2.4.1</div></div>
+    <div class="header"><div class="title">🔥 무간지옥 v2.5</div></div>
     <div class="setup-group">
       <label>학습 모드 선택</label>
       <div class="btn-group" id="mode-btns">
@@ -230,36 +230,48 @@ function renderCard(item){ const d=item.data, box=$('card-container'); box.inner
  card.onclick=()=>{ if(!card.isDragging&&!isCardProcessing){triggerHaptic('flip');card.classList.toggle('flipped');} };
  setupSwipe(card); box.appendChild(card); }
 
-/* --- 6. SWIPE (Pointer Events 통합) --- */
-function judgeDir(dx,dy){
- if(dy<-90&&Math.abs(dy)>Math.abs(dx))return'up';
- if(dx>100)return'right';
- if(dx<-100)return'left';
+/* --- 6. SWIPE: 누적 벡터 합산 판정 ---
+   핵심: 손 스와이프는 흔들리고 대각선으로 새므로 "최종 좌표"가 아니라
+   제스처 전체의 방향 벡터를 누적(pathR/pathL/pathU)해서 판정한다.
+   오른쪽 성분이 누적 60px만 넘어도 무조건 '확신'으로 넘긴다. */
+function judgeDir(dx,dy,p){
+ /* 위(애매함): 수직 누적이 압도적이고 수평 의도가 거의 없을 때만 */
+ if(dy<-100 && p.u>110 && Math.abs(dy)>Math.abs(dx)*2 && p.r<40 && p.l<40) return 'up';
+ /* 수평: 최종 변위 OR 누적 이동 중 하나라도 임계 초과 시 무조건 통과 */
+ if(dx>55 || p.r>60) return 'right';
+ if(dx<-55 || p.l>60) return 'left';
+ if(dy<-100 && Math.abs(dy)>Math.abs(dx)) return 'up';
  return null; }
 
-function flyCard(card,dir){ if(!card)return;
+function flyCard(card,dir,dy){ if(!card)return;
  card.style.transition='transform .25s ease, opacity .25s ease';
- card.style.transform={left:'translate(-1000px,0) rotate(-35deg)',right:'translate(1000px,0) rotate(35deg)',up:'translate(0,-1000px)'}[dir];
+ const y=Math.max(-300,Math.min(300,dy||0));
+ card.style.transform={left:`translate(-1000px,${y}px) rotate(-35deg)`,right:`translate(1000px,${y}px) rotate(35deg)`,up:'translate(0,-1000px)'}[dir];
  card.style.opacity=0; }
 
-function setupSwipe(card){ let sx=0,sy=0,dx=0,dy=0,dragging=false;
+function setupSwipe(card){
+ let sx=0,sy=0,lx=0,ly=0,dx=0,dy=0,dragging=false;
+ const p={r:0,l:0,u:0}; /* 누적 방향 벡터 합 */
  card.addEventListener('pointerdown',e=>{ if(isCardProcessing)return;
-  sx=e.clientX; sy=e.clientY; dx=dy=0; dragging=true;
+  sx=lx=e.clientX; sy=ly=e.clientY; dx=dy=0; p.r=p.l=p.u=0; dragging=true;
   card.isDragging=false; card.style.transition='none';
   try{card.setPointerCapture(e.pointerId);}catch(_){}
  });
  card.addEventListener('pointermove',e=>{ if(!dragging||isCardProcessing)return;
   dx=e.clientX-sx; dy=e.clientY-sy;
+  const mx=e.clientX-lx, my=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+  if(mx>0)p.r+=mx; else p.l-=mx;   /* 오른/왼 성분 누적 */
+  if(my<0)p.u-=my;                 /* 위 성분 누적 */
   if(Math.abs(dx)>8||Math.abs(dy)>8)card.isDragging=true;
   card.style.transform=`translate(${dx}px,${dy}px) rotate(${dx*.05}deg)`;
   card.classList.remove('swiping-left','swiping-right','swiping-up');
-  const dir=judgeDir(dx,dy); if(dir)card.classList.add('swiping-'+dir);
+  const dir=judgeDir(dx,dy,p); if(dir)card.classList.add('swiping-'+dir);
  });
  const end=()=>{ if(!dragging)return; dragging=false; if(isCardProcessing)return;
-  const dir=judgeDir(dx,dy);
+  const dir=judgeDir(dx,dy,p);
   if(!dir){ card.style.transition='transform .25s ease'; card.style.transform='translate(0,0) rotate(0)';
    card.classList.remove('swiping-left','swiping-right','swiping-up'); return; }
-  isCardProcessing=true; flyCard(card,dir);
+  isCardProcessing=true; flyCard(card,dir,dy);
   setTimeout(()=>processSRSResult({left:'UNKNOWN',up:'DOUBT',right:'CONFIDENT'}[dir]),180);
  };
  card.addEventListener('pointerup',end);
