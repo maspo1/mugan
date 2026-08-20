@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🔥 무간지옥 - Avici Vocab v2.4</title>
+<style>
+:root{--bg:#0b0f19;--card:#151d2a;--tx:#f8fafc;--sub:#94a3b8;--grn:#10b981;--red:#ef4444;--amb:#f59e0b;--blu:#3b82f6;--pur:#8b5cf6}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+body{background:var(--bg);color:var(--tx);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.app-container{width:100%;max-width:480px;height:100vh;max-height:880px;display:flex;position:relative;background:#0f172a;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.05);box-shadow:0 25px 50px -12px rgba(0,0,0,.7)}
+.screen{display:none;flex-direction:column;width:100%;height:100%;padding:20px}
+.screen.active{display:flex}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.title{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stats-bar{display:flex;gap:10px;background:rgba(255,255,255,.05);padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:600}
+.combo-badge{color:var(--amb);font-weight:800;font-size:.9rem;animation:pulse .6s infinite alternate}
+.setup-group{margin-bottom:18px}
+.setup-group label{display:block;font-size:.85rem;color:var(--sub);margin-bottom:8px;font-weight:600}
+.btn-group{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn{background:var(--card);border:1px solid rgba(255,255,255,.1);color:var(--tx);padding:12px 8px;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+.btn.active{border-color:var(--blu);background:rgba(59,130,246,.25);color:#60a5fa;box-shadow:0 0 12px rgba(59,130,246,.3)}
+.btn-primary{background:linear-gradient(135deg,var(--red),var(--pur));color:#fff;border:none;margin-top:auto;font-size:1.05rem;padding:15px;border-radius:14px;font-weight:700;box-shadow:0 4px 20px rgba(239,68,68,.4);cursor:pointer}
+.btn-secondary{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:var(--sub);padding:10px;border-radius:10px;font-size:.8rem;margin-top:8px;cursor:pointer;width:100%}
+input[type=number]{width:100%;background:var(--card);border:1px solid rgba(255,255,255,.1);color:#fff;padding:12px;border-radius:12px;font-size:.95rem;outline:none}
+.file-upload-btn{display:block;text-align:center;padding:12px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.2);border-radius:12px;color:var(--sub);font-size:.85rem;cursor:pointer}
+.swipe-hint-container{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center;font-size:.75rem;font-weight:700;padding:6px 0;margin-bottom:8px}
+.hint-item{padding:6px;border-radius:8px;background:rgba(255,255,255,.03)}
+.hint-left{color:var(--red)}.hint-up{color:var(--amb)}.hint-right{color:var(--grn)}
+.timer-container{width:100%;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.timer-bar{height:100%;width:100%;background:linear-gradient(to right,var(--grn),var(--amb),var(--red));transform-origin:left;transition:transform .1s linear}
+.card-container{flex:1;position:relative;display:flex;align-items:center;justify-content:center;perspective:1000px;margin-bottom:10px}
+.card{position:absolute;width:100%;height:100%;background:var(--card);border-radius:20px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 15px 35px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);touch-action:none;transition:transform .15s ease-out,opacity .2s ease-out,border-color .15s;will-change:transform}
+.card.swiping-left{border:2px solid var(--red);box-shadow:0 0 20px rgba(239,68,68,.4)}
+.card.swiping-right{border:2px solid var(--grn);box-shadow:0 0 20px rgba(16,185,129,.4)}
+.card.swiping-up{border:2px solid var(--amb);box-shadow:0 0 20px rgba(245,158,11,.4)}
+.word-main{font-size:1.8rem;font-weight:800;text-align:center;margin-top:10px;word-break:break-word}
+.pronunciation{text-align:center;color:var(--blu);font-size:.9rem;margin-top:4px;font-weight:500}
+.context-sentence{font-size:1.05rem;line-height:1.5;text-align:center;margin-top:15px;color:#e2e8f0;font-style:italic}
+.blank-box{display:inline-block;padding:2px 8px;background:rgba(245,158,11,.2);border-bottom:2px solid var(--amb);color:var(--amb);font-weight:700;font-style:normal;border-radius:4px}
+.target-word-highlight{color:#38bdf8;font-weight:800;font-style:italic;text-decoration:underline;text-underline-offset:3px}
+.answer-box{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:14px;min-height:150px;max-height:240px;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;opacity:0;transition:opacity .2s}
+.card.flipped .answer-box{opacity:1}
+.meaning{font-size:1.2rem;font-weight:700;color:var(--grn);margin-bottom:6px}
+.etymology-badge{font-size:.8rem;color:#fbbf24;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);padding:5px 10px;border-radius:8px;margin-bottom:8px;width:100%;word-break:keep-all;line-height:1.35;font-weight:500}
+.example-sentence{font-size:.88rem;color:#cbd5e1;line-height:1.4;font-style:italic;margin-bottom:4px}
+.example-translation{font-size:.78rem;color:var(--sub);font-style:normal}
+.result-stats{background:var(--card);border-radius:16px;padding:20px;margin:20px 0;display:flex;flex-direction:column;gap:12px}
+.result-row{display:flex;justify-content:space-between;font-size:.95rem}
+@keyframes pulse{0%{transform:scale(1)}100%{transform:scale(1.08)}}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <!-- SETUP SCREEN -->
+  <div id="setup-screen" class="screen active">
+    <div class="header"><div class="title">🔥 무간지옥 v2.4</div></div>
+    <div class="setup-group">
+      <label>학습 모드 선택</label>
+      <div class="btn-group" id="mode-btns">
+        <button class="btn active" data-mode="ENKO">영어➔한글</button>
+        <button class="btn" data-mode="KOEN">한글➔영어</button>
+        <button class="btn" data-mode="CONTEXT">🧠 맥락모드</button>
+      </div>
+    </div>
+    <div class="setup-group">
+      <label>지옥 탈출 제한시간 (단어당 N초 이내 인출)</label>
+      <input type="number" id="limit-sec" value="3" min="1" max="10">
+    </div>
+    <div class="setup-group">
+      <label>사용자 단어장 (CSV 파일)</label>
+      <label class="file-upload-btn" for="csv-file"><span id="file-name">📂 CSV 선택 (미선택 시 기본 토익 단어 로드)</span></label>
+      <input type="file" id="csv-file" accept=".csv" style="display:none">
+    </div>
+    <div class="setup-group">
+      <label>저장된 학습 상태 데이터</label>
+      <div id="storage-info" style="font-size:.8rem;color:var(--sub);margin-bottom:6px">로딩 중...</div>
+      <button class="btn-secondary" id="btn-reset">🔄 저장된 진행상황 초기화</button>
+    </div>
+    <button class="btn btn-primary" id="btn-start">지옥 훈련 시작하기</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen" class="screen">
+    <div class="header">
+      <div class="stats-bar">
+        <div>남은 수: <span id="stat-left" style="color:#fff">0</span></div>
+        <div>완료: <span id="stat-done" style="color:var(--grn)">0</span></div>
+      </div>
+      <div class="combo-badge" id="combo-display" style="display:none">🔥 0 COMBO!</div>
+    </div>
+    <div class="timer-container"><div id="timer-bar" class="timer-bar"></div></div>
+    <div class="swipe-hint-container">
+      <div class="hint-item hint-left">⬅️ 모름<br>(즉시 재출현)</div>
+      <div class="hint-item hint-up">⬆️ 애매함<br>(중간 재출현)</div>
+      <div class="hint-item hint-right">➡️ 확신<br>(지옥 탈출)</div>
+    </div>
+    <div class="card-container" id="card-container"></div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="result-screen" class="screen">
+    <div class="header"><div class="title">🎉 무간지옥 탈출 성공!</div></div>
+    <div class="result-stats">
+      <div class="result-row"><span>완전 암기 단어:</span><strong id="res-total">0</strong></div>
+      <div class="result-row"><span>총 소요 시간:</span><strong id="res-time">00:00</strong></div>
+      <div class="result-row"><span>최대 연속 콤보:</span><strong id="res-max-combo" style="color:var(--amb)">0</strong></div>
+      <div class="result-row"><span>총 리뷰 시도 횟수:</span><strong id="res-reviews">0</strong></div>
+    </div>
+    <button class="btn btn-primary" id="btn-again">다시 설정하기</button>
+  </div>
+</div>
+
+<script>
+const defaultData=[
+{'WordPhrase':'resume','Pronunciation':'/ˈrezjuːmeɪ/','Meaning POS':'n. 이력서','Etymology':'re-(다시) + sumere(가져오다) → 요약','Example Sentence':'Please send your resume to HR.','Example Translation':'인사팀에 이력서를 보내 주세요.'},
+{'WordPhrase':'applicant','Pronunciation':'/ˈæplɪkənt/','Meaning POS':'n. 지원자','Etymology':'ad-(향해) + plic(접다) + -ant(사람)','Example Sentence':'There were over 100 applicants.','Example Translation':'100명이 넘는 지원자가 있었습니다.'},
+{'WordPhrase':'requirement','Pronunciation':'/rɪˈkwaɪərmənt/','Meaning POS':'n. 요구사항, 필요조건','Etymology':'re-(다시) + quaerere(찾다) + -ment(명사)','Example Sentence':'You must meet the minimum requirements.','Example Translation':'최소 요건을 충족해야 합니다.'},
+{'WordPhrase':'meet','Pronunciation':'/miːt/','Meaning POS':'v. 충족하다, 만나다','Etymology':'gemōt(만남)에서 유래','Example Sentence':'The design fails to meet customer demands.','Example Translation':'그 디자인은 고객의 요구를 충족하지 못한다.'},
+{'WordPhrase':'qualified','Pronunciation':'/ˈkwɑːlɪfaɪd/','Meaning POS':'a. 자격 있는, 적격의','Etymology':'quali(어떤 종류의) + fy(만들다) + -ed','Example Sentence':'She is qualified for the position.','Example Translation':'그녀는 그 직책에 적격이다.'},
+{'WordPhrase':'candidate','Pronunciation':'/ˈkændɪdət/','Meaning POS':'n. 후보자, 지원자','Etymology':'candid(하얀) + -ate → 하얀 로마 토가','Example Sentence':'He is a strong candidate.','Example Translation':'그는 유력한 후보자이다.'},
+{'WordPhrase':'confidence','Pronunciation':'/ˈkɑːnfɪdəns/','Meaning POS':'n. 자신감, 신뢰','Etymology':'con-(함께) + fid(믿다) + -ence','Example Sentence':'I have confidence in your skills.','Example Translation':'나는 당신의 능력을 확신합니다.'},
+{'WordPhrase':'highly','Pronunciation':'/ˈhaɪli/','Meaning POS':'ad. 매우, 대단히','Etymology':'high + -ly(부사)','Example Sentence':'The book is highly recommended.','Example Translation':'그 책은 강력히 추천된다.'},
+{'WordPhrase':'professional','Pronunciation':'/prəˈfeʃənl/','Meaning POS':'n. 전문가 a. 전문적인','Etymology':'pro-(앞에) + fess(말하다) + -ional','Example Sentence':'Seek professional advice.','Example Translation':'전문가의 조언을 구하세요.'},
+{'WordPhrase':'interview','Pronunciation':'/ˈɪntərvjuː/','Meaning POS':'v. 면접을 보다 n. 면접','Etymology':'inter-(서로) + view(보다)','Example Sentence':'I have an interview tomorrow.','Example Translation':'나는 내일 면접이 있다.'}
+];
+const $=id=>document.getElementById(id), KEY='avici_vocab_state';
+let activeData=[...defaultData], wordQueue=[], completedWords=[], currentWordObj=null;
+let quizMode='ENKO', timeLimitSec=3, combo=0, maxCombo=0, totalReviews=0;
+let startTime=0, timerInterval=null, cardStartTime=0, isCardProcessing=false;
+
+/* --- 1. HAPTIC --- */
+function triggerHaptic(t){ if(!navigator.vibrate)return; try{navigator.vibrate({flip:30,UNKNOWN:100,DOUBT:[40,40],CONFIDENT:[30,30,60]}[t]||0);}catch(e){} }
+
+/* --- 2. LOCALSTORAGE --- */
+function save(){ localStorage.setItem(KEY,JSON.stringify({activeData,completedWords,wordQueue,quizMode,timeLimitSec,maxCombo})); updateInfo(); }
+function load(){ try{ const p=JSON.parse(localStorage.getItem(KEY)); if(!p)return;
+  if(p.activeData?.length)activeData=p.activeData;
+  if(p.completedWords)completedWords=p.completedWords;
+  if(p.wordQueue)wordQueue=p.wordQueue;
+  if(p.quizMode)quizMode=p.quizMode;
+  if(p.timeLimitSec)timeLimitSec=p.timeLimitSec;
+  if(p.maxCombo)maxCombo=p.maxCombo;
+  $('limit-sec').value=timeLimitSec; syncModeBtns();
+ }catch(e){console.error('load fail',e);} updateInfo(); }
+function resetProgress(){ if(!confirm('저장된 진행상황을 모두 삭제할까요?'))return;
+ localStorage.removeItem(KEY); activeData=[...defaultData]; completedWords=[]; wordQueue=[]; combo=maxCombo=0;
+ updateInfo(); alert('초기화되었습니다.'); }
+function updateInfo(){ $('storage-info').innerHTML=`단어 <strong>${activeData.length}</strong>개 / 완료 <strong style="color:var(--grn)">${completedWords.length}</strong>개 / 대기 <strong>${wordQueue.length}</strong>개`; }
+
+/* --- 3. STEM HIGHLIGHT --- */
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function stemRe(w){ if(!w)return null;
+ const c=w.trim().toLowerCase().split(/[^a-z]/)[0];
+ if(!c||c.length<3)return null;
+ const irr={meet:'meet|meets|meeting|met',seek:'seek|seeks|seeking|sought',high:'high|highly|higher|highest'};
+ if(irr[c])return new RegExp('\\b('+irr[c]+')\\b','gi');
+ let s=c;
+ if(s.endsWith('ing')&&s.length>5)s=s.slice(0,-3);
+ else if(s.endsWith('ed')&&s.length>4)s=s.slice(0,-2);
+ else if(s.endsWith('es')&&s.length>4)s=s.slice(0,-2);
+ else if(s.endsWith('s')&&s.length>3)s=s.slice(0,-1);
+ return new RegExp('\\b('+esc(s)+'[a-z]*)\\b','gi'); }
+const mark=(s,w,t)=>{ if(!s)return''; const re=stemRe(w); return `<i>${re?s.replace(re,t):s}</i>`; };
+const highlight=(s,w)=>mark(s,w,'<b class="target-word-highlight">$1</b>');
+const blank=(s,w)=>mark(s,w,'<span class="blank-box">___</span>');
+
+/* --- 4. MODE / FILE --- */
+function syncModeBtns(){ document.querySelectorAll('#mode-btns .btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===quizMode)); }
+document.querySelectorAll('#mode-btns .btn').forEach(b=>b.onclick=()=>{quizMode=b.dataset.mode;syncModeBtns();});
+$('csv-file').onchange=e=>{ const f=e.target.files[0]; if(!f)return; $('file-name').innerText=f.name;
+ const r=new FileReader(); r.onload=ev=>parseCSV(ev.target.result); r.readAsText(f); };
+function parseCSV(text){ const lines=text.split(/\r?\n/).filter(l=>l.trim()); if(lines.length<2)return; const parsed=[];
+ for(let i=1;i<lines.length;i++){
+  const row=lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c=>c.trim().replace(/^"|"$/g,''));
+  if(row.length<2)continue;
+  parsed.push({'WordPhrase':row[0]||'','Pronunciation':row[1]||'','Meaning POS':row[2]||'','Etymology':row[3]||'',
+   'Example Sentence':row[5]||row[4]||'','Example Translation':row[6]||''});
+ }
+ if(parsed.length){ activeData=parsed; completedWords=[]; wordQueue=[]; save(); alert(parsed.length+'개의 단어를 불러왔습니다.'); } }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); }
+function showSetup(){ showScreen('setup-screen'); updateInfo(); }
+
+/* --- 5. QUIZ CORE --- */
+function startQuiz(){ timeLimitSec=parseInt($('limit-sec').value)||3;
+ if(!wordQueue.length){
+  const un=activeData.filter(d=>!completedWords.some(c=>c.WordPhrase===d.WordPhrase));
+  wordQueue=(un.length?un:activeData).map(d=>({data:d,srsLevel:0,failCount:0})).sort(()=>Math.random()-.5);
+ }
+ combo=0; totalReviews=0; startTime=Date.now();
+ showScreen('quiz-screen'); nextCard(); }
+
+function nextCard(){ isCardProcessing=false;
+ if(!wordQueue.length){ finishQuiz(); return; }
+ currentWordObj=wordQueue.shift(); totalReviews++;
+ updateStats();                    /* FIX①: shift() 이후에 갱신 → 남은 수 off-by-one 해결 */
+ renderCard(currentWordObj); cardStartTime=Date.now(); startTimer(); }
+
+function startTimer(){ clearInterval(timerInterval);
+ const bar=$('timer-bar'); bar.style.transform='scaleX(1)';
+ timerInterval=setInterval(()=>{
+  if(isCardProcessing){clearInterval(timerInterval);return;}
+  const ratio=Math.max(0,1-(Date.now()-cardStartTime)/1000/timeLimitSec);
+  bar.style.transform=`scaleX(${ratio})`;
+  if(ratio<=0){clearInterval(timerInterval);handleTimeout();}
+ },50); }
+
+function handleTimeout(){ if(isCardProcessing)return; isCardProcessing=true;
+ const card=document.querySelector('.card');
+ if(card){ card.classList.add('flipped'); flyCard(card,'left'); setTimeout(()=>processSRSResult('UNKNOWN'),250); }
+ else processSRSResult('UNKNOWN'); }
+
+function renderCard(item){ const d=item.data, box=$('card-container'); box.innerHTML='';
+ const card=document.createElement('div'); card.className='card';
+ const ety=d['Etymology']?`<div class="etymology-badge">${d['Etymology']}</div>`:'';
+ const ex=highlight(d['Example Sentence'],d['WordPhrase']);
+ let q,a;
+ if(quizMode==='ENKO'){
+  q=`<div class="word-main">${d['WordPhrase']}</div><div class="pronunciation">${d['Pronunciation']||''}</div>`;
+  a=`<div class="meaning">${d['Meaning POS']}</div>${ety}<div class="example-sentence">${ex}</div><div class="example-translation">${d['Example Translation']||''}</div>`;
+ }else if(quizMode==='KOEN'){
+  q=`<div class="word-main" style="font-size:1.5rem;color:var(--grn)">${d['Meaning POS']}</div>`;
+  a=`<div class="word-main" style="font-size:1.6rem;margin-top:0">${d['WordPhrase']}</div><div class="pronunciation">${d['Pronunciation']||''}</div>${ety}<div class="example-sentence" style="margin-top:6px">${ex}</div><div class="example-translation">${d['Example Translation']||''}</div>`;
+ }else{
+  q=`<div class="context-sentence">${blank(d['Example Sentence'],d['WordPhrase'])}</div><div class="example-translation" style="margin-top:10px">${d['Example Translation']||''}</div>`;
+  a=`<div class="word-main" style="font-size:1.7rem;margin-top:0">${d['WordPhrase']}</div><div class="pronunciation">${d['Pronunciation']||''}</div><div class="meaning" style="margin-top:4px">${d['Meaning POS']}</div>${ety}<div class="example-sentence" style="margin-top:4px">${ex}</div>`;
+ }
+ card.innerHTML=`<div>${q}</div><div class="answer-box">${a}</div><div style="text-align:center;color:var(--sub);font-size:.72rem">탭: 뒤집기 / 3방향 스와이프: 판정</div>`;
+ card.onclick=()=>{ if(!card.isDragging&&!isCardProcessing){triggerHaptic('flip');card.classList.toggle('flipped');} };
+ setupSwipe(card); box.appendChild(card); }
+
+/* --- 6. SWIPE: Pointer Events로 터치/마우스 통합 (코드 절반) --- */
+function judgeDir(dx,dy){
+ /* FIX②(치명): '위' 판정을 수평보다 먼저, |dy|>|dx|*0.8 이라는 느슨한 조건으로 검사하던 것이
+    손 스와이프 카운팅 오류의 원인. 오른쪽으로 살짝 대각선(dx=120, dy=-100)으로 밀어도
+    '확신'이 아니라 '애매함'으로 처리되어 완료 카운트가 오르지 않고 콤보가 리셋됐음.
+    → 수직 이동이 수평 이동보다 '클 때만' 위 스와이프로 인정(주축 판정). */
+ if(dy<-90&&Math.abs(dy)>Math.abs(dx))return'up';
+ if(dx>100)return'right';
+ if(dx<-100)return'left';
+ return null; }
+
+function flyCard(card,dir){ if(!card)return;
+ card.style.transition='transform .25s ease, opacity .25s ease';
+ card.style.transform={left:'translate(-1000px,0) rotate(-35deg)',right:'translate(1000px,0) rotate(35deg)',up:'translate(0,-1000px)'}[dir];
+ card.style.opacity=0; }
+
+function setupSwipe(card){ let sx=0,sy=0,dx=0,dy=0,dragging=false;
+ card.addEventListener('pointerdown',e=>{ if(isCardProcessing)return;
+  sx=e.clientX; sy=e.clientY; dx=dy=0; dragging=true;   /* FIX③: 이전 드래그 잔여 델타 초기화 */
+  card.isDragging=false; card.style.transition='none';
+  try{card.setPointerCapture(e.pointerId);}catch(_){}
+ });
+ card.addEventListener('pointermove',e=>{ if(!dragging||isCardProcessing)return;
+  dx=e.clientX-sx; dy=e.clientY-sy;
+  if(Math.abs(dx)>8||Math.abs(dy)>8)card.isDragging=true;
+  card.style.transform=`translate(${dx}px,${dy}px) rotate(${dx*.05}deg)`;
+  card.classList.remove('swiping-left','swiping-right','swiping-up');
+  const dir=judgeDir(dx,dy); if(dir)card.classList.add('swiping-'+dir);
+ });
+ const end=()=>{ if(!dragging)return; dragging=false; if(isCardProcessing)return;
+  const dir=judgeDir(dx,dy);
+  if(!dir){ card.style.transition='transform .25s ease'; card.style.transform='translate(0,0) rotate(0)';
+   card.classList.remove('swiping-left','swiping-right','swiping-up'); return; }
+  isCardProcessing=true; flyCard(card,dir);
+  setTimeout(()=>processSRSResult({left:'UNKNOWN',up:'DOUBT',right:'CONFIDENT'}[dir]),180);
+ };
+ card.addEventListener('pointerup',end);
+ card.addEventListener('pointercancel',end); }
+
+function processSRSResult(j){ clearInterval(timerInterval);
+ const elapsed=(Date.now()-cardStartTime)/1000; triggerHaptic(j);
+ if(j==='CONFIDENT'&&elapsed<=timeLimitSec){ combo++; maxCombo=Math.max(maxCombo,combo); completedWords.push(currentWordObj.data); }
+ else{ combo=0; reQueue(currentWordObj, j==='CONFIDENT'?'DOUBT':j); }
+ save(); nextCard(); }
+
+function reQueue(item,type){
+ if(type==='UNKNOWN'){ item.srsLevel=0; item.failCount++;
+  wordQueue.splice(Math.min(wordQueue.length,1+Math.floor(Math.random()*2)),0,item);
+ }else{ item.srsLevel++;
+  wordQueue.splice(Math.min(wordQueue.length,3+item.srsLevel*2+Math.floor(Math.random()*2)),0,item);
+ } }
+
+function updateStats(){ $('stat-left').innerText=wordQueue.length+1; /* 큐 + 현재 카드 */
+ $('stat-done').innerText=completedWords.length;
+ const cd=$('combo-display');
+ if(combo>1){ cd.innerText=`🔥 ${combo} COMBO!`; cd.style.display='block'; } else cd.style.display='none'; }
+
+function finishQuiz(){ clearInterval(timerInterval);
+ const t=Math.floor((Date.now()-startTime)/1000);
+ $('res-total').innerText=completedWords.length;
+ $('res-time').innerText=`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+ $('res-max-combo').innerText=maxCombo+' COMBO';
+ $('res-reviews').innerText=totalReviews;
+ showScreen('result-screen'); save(); }
+
+$('btn-start').onclick=startQuiz;
+$('btn-reset').onclick=resetProgress;
+$('btn-again').onclick=showSetup;
+window.addEventListener('DOMContentLoaded',load);
+</script>
+</body>
+</html>
